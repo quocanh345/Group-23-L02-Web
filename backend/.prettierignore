@@ -1,3 +1,6 @@
 node_modules
 dist
 package-lock.json
+# File do Prisma sinh ra, giữ nguyên định dạng gốc
+prisma7.config.ts
+src/generated
