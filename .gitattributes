@@ -1,0 +1,2 @@
+# Chuẩn hóa xuống dòng LF cho mọi file văn bản, kể cả khi clone trên Windows
+* text=auto eol=lf
