@@ -11,3 +11,200 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// ---------- Enums ----------
+
+enum UserRole {
+  learner
+  admin
+
+  @@map("user_role")
+}
+
+enum QuestionSetType {
+  manual
+  ai
+  review
+
+  @@map("question_set_type")
+}
+
+enum Difficulty {
+  easy
+  medium
+  hard
+
+  @@map("difficulty")
+}
+
+enum QuestionSource {
+  manual
+  ai
+
+  @@map("question_source")
+}
+
+enum AttemptMode {
+  practice
+  exam
+
+  @@map("attempt_mode")
+}
+
+enum AiAction {
+  generate
+  solve
+  review
+
+  @@map("ai_action")
+}
+
+// ---------- Tài khoản ----------
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  fullName     String   @map("full_name") @db.VarChar(100)
+  role         UserRole @default(learner)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  subjects Subject[]
+  attempts Attempt[]
+  aiUsages AiUsage[]
+
+  @@map("users")
+}
+
+// ---------- Nội dung học ----------
+
+model Subject {
+  id          Int      @id @default(autoincrement())
+  ownerId     Int      @map("owner_id")
+  name        String   @db.VarChar(150)
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  owner        User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  questionSets QuestionSet[]
+  questions    Question[]
+
+  @@index([ownerId])
+  @@map("subjects")
+}
+
+model QuestionSet {
+  id        Int             @id @default(autoincrement())
+  subjectId Int             @map("subject_id")
+  title     String          @db.VarChar(200)
+  type      QuestionSetType @default(manual)
+  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  subject      Subject       @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  setQuestions SetQuestion[]
+  attempts     Attempt[]
+
+  @@index([subjectId])
+  @@map("question_sets")
+}
+
+model Question {
+  id            Int            @id @default(autoincrement())
+  subjectId     Int            @map("subject_id")
+  content       String
+  explanation   String?
+  topic         String?        @db.VarChar(100)
+  difficulty    Difficulty     @default(medium)
+  source        QuestionSource @default(manual)
+  sourceExcerpt String?        @map("source_excerpt")
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  subject        Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  answerOptions  AnswerOption[]
+  setQuestions   SetQuestion[]
+  attemptAnswers AttemptAnswer[]
+
+  @@index([subjectId])
+  @@map("questions")
+}
+
+model AnswerOption {
+  id         Int     @id @default(autoincrement())
+  questionId Int     @map("question_id")
+  content    String
+  isCorrect  Boolean @default(false) @map("is_correct")
+  position   Int
+
+  question       Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  attemptAnswers AttemptAnswer[]
+
+  @@index([questionId])
+  @@map("answer_options")
+}
+
+// Bảng trung gian: "câu X nằm trong đề Y ở vị trí Z"
+model SetQuestion {
+  setId      Int @map("set_id")
+  questionId Int @map("question_id")
+  position   Int
+
+  set      QuestionSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+  question Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@id([setId, questionId])
+  @@index([questionId])
+  @@map("set_questions")
+}
+
+// ---------- Làm bài ----------
+
+model Attempt {
+  id           Int         @id @default(autoincrement())
+  userId       Int         @map("user_id")
+  setId        Int         @map("set_id")
+  mode         AttemptMode
+  timeLimitSec Int?        @map("time_limit_sec")
+  startedAt    DateTime    @default(now()) @map("started_at") @db.Timestamptz(3)
+  submittedAt  DateTime?   @map("submitted_at") @db.Timestamptz(3)
+  score        Decimal?    @db.Decimal(5, 2)
+
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  set     QuestionSet     @relation(fields: [setId], references: [id], onDelete: Cascade)
+  answers AttemptAnswer[]
+
+  @@index([userId, startedAt])
+  @@index([setId])
+  @@map("attempts")
+}
+
+model AttemptAnswer {
+  id               Int     @id @default(autoincrement())
+  attemptId        Int     @map("attempt_id")
+  questionId       Int     @map("question_id")
+  selectedOptionId Int?    @map("selected_option_id")
+  isCorrect        Boolean @map("is_correct")
+
+  attempt        Attempt       @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question       Question      @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption AnswerOption? @relation(fields: [selectedOptionId], references: [id], onDelete: SetNull)
+
+  @@unique([attemptId, questionId])
+  @@index([questionId])
+  @@index([selectedOptionId])
+  @@map("attempt_answers")
+}
+
+// ---------- Giới hạn AI ----------
+
+model AiUsage {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  action    AiAction
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("ai_usage")
+}
