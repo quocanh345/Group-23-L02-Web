@@ -32,4 +32,5 @@ Kiểm tra trước khi mở PR: `npm run lint` và `npm run build` trong `backe
 ## Quy ước
 
 - Đọc `docs/database.md` trước khi làm việc liên quan đến database; cập nhật file này trong cùng PR nếu đổi bảng hoặc cột.
+- Đọc `docs/api_convention.md` và `docs/api.md` trước khi làm việc liên quan đến API; đổi endpoint thì cập nhật `docs/api.md` trong cùng PR.
 - Tuân thủ `CONTRIBUTING.md`. Không commit bí mật.

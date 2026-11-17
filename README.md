@@ -7,6 +7,8 @@ Tài liệu liên quan:
 - [CONTRIBUTING.md](CONTRIBUTING.md): quy ước nhánh, commit, PR. **Đọc trước khi code.**
 - [ROADMAP.md](ROADMAP.md): lộ trình và mốc theo tuần.
 - [docs/database.md](docs/database.md): thiết kế cơ sở dữ liệu.
+- [docs/api.md](docs/api.md): hợp đồng API, mỗi endpoint nhận gì và trả gì.
+- [docs/api_convention.md](docs/api_convention.md): quy ước chung khi viết API (định dạng response, mã lỗi, bảo mật).
 
 ## Công nghệ
 
