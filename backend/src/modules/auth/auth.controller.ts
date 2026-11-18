@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import prisma from "../../lib/prisma.js";
-import { error } from "node:console";
+
 
 //chuẩn hóa Email
 const normalizeEmail = (email: string) => {
@@ -37,7 +37,7 @@ const sendError = (
 }
 
 //Register
-export async function register(req: Request, res: Response) {
+export const register = async (req: Request, res: Response)  =>{
     const {email, password, fullName} = req.body ?? {}
 
     if(
@@ -103,3 +103,68 @@ export async function register(req: Request, res: Response) {
 }
 
 //Login
+export const login = async (req: Request, res: Response) => {
+    const body = req.body ?? {};
+    const {email, password} = body;
+    const details: ValidationDetail[] = [];
+
+    if(typeof email !== 'string' || !email.trim()){
+        details.push({
+            field: 'email',
+            message: 'Vui lòng nhập email',
+        })
+    }
+
+    if(typeof password !== 'string' || !password){
+        details.push({
+            field: 'password',
+            message: 'Vui lòng nhập mật khẩu',
+        })
+    }
+
+    if(details.length > 0){
+        return sendError(res, 400, 'VALIDATION_ERROR', 'Dữ liệu không hợp lệ', details)
+    }
+
+    const normalizedEmail = normalizeEmail(email);
+
+    if(!isValidEmail(normalizedEmail) || normalizedEmail.length > 255 || Buffer.byteLength(password, 'utf8') > 72){
+        return sendError(res, 400, 'VALIDATION_ERROR', 'Dữ liệu không hợp lệ')
+    }
+
+    try {
+        //Tìm tài khoản trong DB
+        const user = await prisma.user.findUnique({
+            where: {
+                email: normalizedEmail,
+            }
+        })
+
+        if(!user){
+            return sendError(res, 401, 'UNAUTHENTICATED', 'Email hoặc mât khẩu không đúng')
+        }
+        //So sánh mật khẩu
+        const isPasswordValid = await bcrypt.compare(
+            password,
+            user.passwordHash,
+        )
+        if(!isPasswordValid){
+            return sendError(res, 401, 'UNAUTHENTICATED', 'Email hoặc mật khẩu không đúng')
+        }
+        //Lấy thông tin được phép trả về
+        const safeUser = {
+            id: user.id, 
+            email: user.email,
+            fullName: user.fullName,
+            role: user.role,
+            createdAt: user.createdAt,
+        }
+        return res.status(200).json({
+            data: safeUser,
+        })
+    } catch (error) {
+        console.error('Login error: ', error);
+        return sendError(res, 500, 'INTERNAL_ERROR', 'Đã xảy ra lỗi máy chủ')
+        
+    }
+}
