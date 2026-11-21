@@ -1,0 +1,87 @@
+# Tự kiểm tra mỗi PR vào main: định dạng, lint, build cho backend và frontend.
+# Tên hai job (Backend, Frontend) là tên check bắt buộc trong ruleset protect-main,
+# đổi tên job thì phải sửa cả ruleset.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# PR được push liên tục thì hủy lượt chạy cũ, chỉ giữ lượt mới nhất
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Cài thư viện
+        id: install
+        run: npm ci
+
+      # Prisma Client không được commit nên phải sinh lại trước khi build
+      - name: Sinh Prisma Client
+        id: generate
+        run: npm run prisma:generate
+
+      # Các bước kiểm tra vẫn chạy tiếp dù bước trước lỗi, để thấy hết lỗi trong một lần
+      - name: Kiểm tra định dạng (Prettier)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run format:check
+
+      - name: Lint (oxlint)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run lint
+
+      - name: Build (tsc)
+        if: ${{ !cancelled() && steps.generate.outcome == 'success' }}
+        run: npm run build
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Cài thư viện
+        id: install
+        run: npm ci
+
+      - name: Kiểm tra định dạng (Prettier)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run format:check
+
+      - name: Lint (oxlint)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run lint
+
+      - name: Build (tsc + vite)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run build
