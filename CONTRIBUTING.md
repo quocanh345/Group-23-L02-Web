@@ -108,6 +108,7 @@ Quy tắc:
 Quy tắc:
 - PR nhỏ, nên dưới khoảng 400 dòng thay đổi. Lớn hơn thì chia nhỏ.
 - Trước khi mở PR: tự chạy thử, kiểm tra không còn `console.log` thừa, không có file `.env`.
+- CI tự chạy `format:check`, `lint`, `build` cho backend và frontend ở mỗi PR. Check phải xanh mới merge được. Báo lỗi định dạng thì chạy `npm run format` rồi commit lại.
 - Nếu `main` đã thay đổi trong lúc làm, cập nhật nhánh của mình rồi kiểm tra lại.
 
 ## 8. Review

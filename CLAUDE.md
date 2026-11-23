@@ -1,4 +1,4 @@
-# CLAUDE.md
+      # CLAUDE.md
 
 ## Quy tắc quan trọng nhất
 
@@ -27,7 +27,7 @@ npm --prefix backend run prisma:generate    # sinh Prisma Client
 npm run dev                                 # backend :3000, frontend :5173
 ```
 
-Kiểm tra trước khi mở PR: `npm run lint` và `npm run build` trong `backend/` và `frontend/`.
+Kiểm tra trước khi mở PR: `npm run format:check`, `npm run lint` và `npm run build` trong `backend/` và `frontend/`. CI (`.github/workflows/ci.yml`) chạy đúng các lệnh này cho mỗi PR vào `main`.
 
 ## Quy ước
 
