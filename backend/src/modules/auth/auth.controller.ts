@@ -1,7 +1,8 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import prisma from "../../lib/prisma.js";
-
+import { generateAccessToken } from "./auth.utils.js";
+import { COOKIE_NAME, cookieOptions } from "./auth.cookie.js";
 
 //chuẩn hóa Email
 const normalizeEmail = (email: string) => {
@@ -89,6 +90,17 @@ export const register = async (req: Request, res: Response)  =>{
             select: {id: true, email:true, fullName: true, role: true, createdAt: true},
         })
 
+         const accessToken = generateAccessToken({
+            userId: user.id,
+            role: user.role,
+        })
+        //Lưu JWT trong HTTPOnly Cookie
+        res.cookie(
+            COOKIE_NAME,
+            accessToken,
+            cookieOptions
+        )
+
         return res.status(201).json({data : user})
     }catch (error){
         //2 request trùng email 1 lúc
@@ -99,7 +111,6 @@ export const register = async (req: Request, res: Response)  =>{
         console.error('Register error: ', error);
         return sendError(res, 500, 'INTERNAL_ERROR', 'Đã xảy ra lỗi máy chủ')
     }
-  
 }
 
 //Login
@@ -159,6 +170,18 @@ export const login = async (req: Request, res: Response) => {
             role: user.role,
             createdAt: user.createdAt,
         }
+
+        const accessToken = generateAccessToken({
+            userId: user.id,
+            role: user.role,
+        })
+
+        res.cookie(
+            COOKIE_NAME,
+            accessToken,
+            cookieOptions
+        )
+
         return res.status(200).json({
             data: safeUser,
         })
