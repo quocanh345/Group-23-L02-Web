@@ -5,7 +5,6 @@ import cookieParser from 'cookie-parser';
 import type { Request,Response } from "express";
 
 import authRouter from './modules/auth/auth.routes.js';
-import { error } from 'node:console';
 
 const app = express()
 const port = Number(process.env.PORT) || 3000
