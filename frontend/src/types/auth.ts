@@ -1,4 +1,5 @@
-export type Screen = 'signin' | 'signup' | 'forgot' | 'otp' | 'reset' | 'success' | 'dashboard'
+export type Screen =
+  'signin' | 'signup' | 'forgot' | 'otp' | 'reset' | 'success' | 'dashboard'
 
 // Demo only: credentials and OTP must be handled by a backend in production.
 export type Account = { fullName: string; email: string; password: string }
