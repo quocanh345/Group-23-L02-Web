@@ -1,5 +1,7 @@
 import express from 'express'
 import cors from 'cors'
+import indexRouter from './routes/index.js'
+
 import cookieParser from 'cookie-parser'
 
 import type { Request, Response } from 'express'
@@ -22,6 +24,9 @@ app.use(
     credentials: true,
   }),
 )
+
+//Kiểm tra tình trạng server
+app.use('/api', indexRouter)
 
 //Mọi route đều có tiền tố /api
 const apiRouter = express.Router()
