@@ -13,8 +13,8 @@ export class UserNotFoundError extends Error {
 }
 
 export class InvalidCredentialsError extends Error {
-    constructor(){
-        super('Email hoặc mật khẩu không đúng')
-        this.name = 'InvalidCredentialsError'
-    }
+  constructor() {
+    super('Email hoặc mật khẩu không đúng')
+    this.name = 'InvalidCredentialsError'
+  }
 }
