@@ -7,6 +7,8 @@ Tài liệu liên quan:
 - [CONTRIBUTING.md](CONTRIBUTING.md): quy ước nhánh, commit, PR. **Đọc trước khi code.**
 - [ROADMAP.md](ROADMAP.md): lộ trình và mốc theo tuần.
 - [docs/database.md](docs/database.md): thiết kế cơ sở dữ liệu.
+- [docs/api.md](docs/api.md): hợp đồng API, mỗi endpoint nhận gì và trả gì.
+- [docs/api_convention.md](docs/api_convention.md): quy ước chung khi viết API (định dạng response, mã lỗi, bảo mật).
 
 ## Công nghệ
 
@@ -108,11 +110,14 @@ Chạy trong **`backend/`** (hoặc thêm `--prefix backend` khi đứng ở g�
 | `npm start`               | Chạy bản đã build                               |
 | `npm run lint`            | Kiểm tra lỗi code bằng oxlint                   |
 | `npm run format`          | Định dạng code bằng Prettier                    |
+| `npm run format:check`    | Kiểm tra định dạng, không sửa file (CI dùng)    |
 | `npm run prisma:migrate`  | Tạo và áp dụng migration (`prisma migrate dev`) |
 | `npm run prisma:generate` | Sinh lại Prisma Client                          |
 | `npm run prisma:studio`   | Mở Prisma Studio để xem và sửa dữ liệu          |
 
-Chạy trong **`frontend/`**: `dev`, `build`, `preview`, `lint`, `format`.
+Chạy trong **`frontend/`**: `dev`, `build`, `preview`, `lint`, `format`, `format:check`.
+
+Mỗi PR vào `main` được GitHub Actions tự kiểm tra (`.github/workflows/ci.yml`): `format:check`, `lint`, `build` cho cả backend và frontend. Check báo đỏ thì không merge được. Sửa nhanh lỗi định dạng bằng `npm run format`.
 
 ## 4. Lỗi thường gặp
 

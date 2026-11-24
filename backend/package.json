@@ -9,11 +9,13 @@
     "start": "node --env-file-if-exists=.env dist/server.js",
     "lint": "oxlint",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio --port 5555",
     "prisma:generate": "prisma generate"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.10.1",
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "bcryptjs": "^3.0.3",

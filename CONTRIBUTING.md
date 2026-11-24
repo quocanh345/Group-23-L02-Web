@@ -108,6 +108,7 @@ Quy tắc:
 Quy tắc:
 - PR nhỏ, nên dưới khoảng 400 dòng thay đổi. Lớn hơn thì chia nhỏ.
 - Trước khi mở PR: tự chạy thử, kiểm tra không còn `console.log` thừa, không có file `.env`.
+- CI tự chạy `format:check`, `lint`, `build` cho backend và frontend ở mỗi PR. Check phải xanh mới merge được. Báo lỗi định dạng thì chạy `npm run format` rồi commit lại.
 - Nếu `main` đã thay đổi trong lúc làm, cập nhật nhánh của mình rồi kiểm tra lại.
 
 ## 8. Review
@@ -134,3 +135,22 @@ Một việc chỉ được tính là xong khi:
 - [ ] PR đã được duyệt và merge vào `main`
 - [ ] Issue đã đóng, thẻ nằm ở cột **Done**
 - [ ] Tài liệu (`README`, `.env.example`) đã cập nhật nếu có thay đổi liên quan
+
+## 11. Chia lớp ở backend
+
+Mỗi request đi qua ba lớp, mỗi lớp chỉ gọi lớp ngay dưới nó:
+
+```
+route → controller → service → repository → prisma
+```
+
+| Lớp | File | Làm gì | Không được làm |
+|---|---|---|---|
+| Controller | `<module>.controller.ts` | Đọc và kiểm tra `req`, gọi service, đổi kết quả hoặc lỗi thành HTTP | Import `prisma`, chứa logic nghiệp vụ |
+| Service | `<module>.service.ts` | Logic nghiệp vụ: kiểm tra điều kiện, mã hóa mật khẩu, ghép nhiều truy vấn | Import `prisma`, đụng tới `req`/`res` |
+| Repository | `<module>.repository.ts` | Truy vấn database qua Prisma | Chứa logic nghiệp vụ, đụng tới `req`/`res` |
+
+Quy tắc:
+- **Chỉ repository được import `prisma`** (từ `src/lib/prisma.ts`). Không tạo `PrismaClient` mới ở chỗ khác.
+- Repository chỉ trả các trường an toàn. Hàm nào buộc phải trả trường nhạy cảm (ví dụ `passwordHash`) thì tên hàm phải nói rõ, như `findByEmailWithPassword`.
+- Repository đổi lỗi của Prisma (`P2002`, `P2025`...) thành lỗi riêng (ví dụ `EmailTakenError`, `UserNotFoundError` trong `users/user.errors.ts`). Service và controller kiểm tra bằng `instanceof`, không so sánh chuỗi thông báo.

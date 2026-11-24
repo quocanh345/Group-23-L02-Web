@@ -1,4 +1,4 @@
-# CLAUDE.md
+      # CLAUDE.md
 
 ## Quy tắc quan trọng nhất
 
@@ -27,9 +27,10 @@ npm --prefix backend run prisma:generate    # sinh Prisma Client
 npm run dev                                 # backend :3000, frontend :5173
 ```
 
-Kiểm tra trước khi mở PR: `npm run lint` và `npm run build` trong `backend/` và `frontend/`.
+Kiểm tra trước khi mở PR: `npm run format:check`, `npm run lint` và `npm run build` trong `backend/` và `frontend/`. CI (`.github/workflows/ci.yml`) chạy đúng các lệnh này cho mỗi PR vào `main`.
 
 ## Quy ước
 
 - Đọc `docs/database.md` trước khi làm việc liên quan đến database; cập nhật file này trong cùng PR nếu đổi bảng hoặc cột.
+- Đọc `docs/api_convention.md` và `docs/api.md` trước khi làm việc liên quan đến API; đổi endpoint thì cập nhật `docs/api.md` trong cùng PR.
 - Tuân thủ `CONTRIBUTING.md`. Không commit bí mật.
