@@ -44,7 +44,7 @@ export class UserService {
 
     //Đăng nhập
     async login(data: LoginData): Promise<SafeUser>{
-        const email = data.email.trim().toLocaleLowerCase()
+        const email = data.email.trim().toLowerCase()
         const user = await this.userRepository.findByEmailWithPassword(email)
 
         if(!user){
