@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser'
 import type { Request, Response } from 'express'
 
 import authRouter from './modules/auth/auth.routes.js'
+import { errorHandler } from './middlewares/error.middleware.js'
 
 const app = express()
 const port = Number(process.env.PORT) || 3000
@@ -43,6 +44,9 @@ app.use((req: Request, res: Response) => {
     },
   })
 })
+
+//Xử lý lỗi chung
+app.use(errorHandler)
 
 //Khởi động Server
 app.listen(port, () => {

@@ -176,7 +176,7 @@ export const login = async (req: Request, res: Response) => {
       return sendError(
         res,
         401,
-        'UNAUTHENTICED',
+        'UNAUTHENTICATED',
         'Email hoặc mật khẩu không đúng',
       )
     }
