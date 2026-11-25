@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express'
 import { verifyAccessToken } from '../modules/auth/auth.utils.js'
 import { COOKIE_NAME } from '../modules/auth/auth.cookie.js'
+import { AppError } from '../lib/errors.js'
 
 //Mở rộng kiểu Request để lưu tt user
 declare global {
@@ -50,25 +51,17 @@ export const authenticate = (
 
 export const requireAdmin = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ) => {
   if (!req.user) {
-    return res.status(401).json({
-      error: {
-        code: 'UNAUTHENTICATED',
-        message: 'Bạn chưa đăng nhập',
-      },
-    })
+    return next(new AppError('UNAUTHENTICATED', 'Bạn chưa đăng nhập'))
   }
 
   if (req.user.role !== 'admin') {
-    return res.status(403).json({
-      error: {
-        code: 'FORBIDDEN',
-        message: 'Bạn không có quyền thực hiện thao tác này',
-      },
-    })
+    return next(
+      new AppError('FORBIDDEN', 'Bạn không có quyền thực hiện thao tác này'),
+    )
   }
   return next()
 }
