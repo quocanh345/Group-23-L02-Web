@@ -1,58 +1,20 @@
 import type { Request, Response } from 'express'
-import { AppError, type ErrorDetail } from '../../lib/errors.js'
 import { generateAccessToken } from './auth.utils.js'
 import { COOKIE_NAME, cookieOptions } from './auth.cookie.js'
 import { authService } from './auth.service.js'
 
-//chuẩn hóa Email
-const normalizeEmail = (email: string) => {
-  return email.trim().toLowerCase()
-}
-//kiểm tra Email
-const isValidEmail = (email: string) => {
-  const emaiRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emaiRegex.test(email)
-}
+import { validate } from '../../lib/validate.js'
+import { registerSchema, loginSchema } from './auth.schema.js'
 
 //Register
 export const register = async (req: Request, res: Response) => {
-  const { email, password, fullName } = req.body ?? {}
-
-  if (
-    typeof email !== 'string' ||
-    typeof password !== 'string' ||
-    typeof fullName !== 'string'
-  ) {
-    throw new AppError('VALIDATION_ERROR', 'Dữ liệu đăng ký không hợp lệ')
-  }
-
-  const normalizedEmail = normalizeEmail(email)
-  const normalizedName = fullName.trim()
-  const errors: ErrorDetail[] = []
-
-  if (!isValidEmail(normalizedEmail) || normalizedEmail.length > 255) {
-    errors.push({ field: 'email', message: 'Email không hợp lệ' })
-  }
-  if (
-    password.length < 8 ||
-    password.length > 72 ||
-    Buffer.byteLength(password, 'utf8') > 72
-  ) {
-    errors.push({ field: 'password', message: 'Mật khẩu từ 8-72 ký tự' })
-  }
-  if (normalizedName.length < 1 || normalizedName.length > 100) {
-    errors.push({ field: 'fullName', message: 'Họ tên từ 1-100 ký tự' })
-  }
-
-  if (errors.length > 0) {
-    throw new AppError('VALIDATION_ERROR', 'Dữ liệu không hợp lệ', errors)
-  }
+  const data = validate(registerSchema, req.body)
 
   //Gọi service đăng ký
   const user = await authService.register({
-    email: normalizedEmail,
-    password,
-    fullName: normalizedName,
+    email: data.email,
+    password: data.password,
+    fullName: data.fullName,
   })
 
   //Tạo JWT
@@ -60,7 +22,6 @@ export const register = async (req: Request, res: Response) => {
     userId: user.id,
     role: user.role,
   })
-
   //Lưu JWT trong HTTPOnly Cookie
   res.cookie(COOKIE_NAME, accessToken, cookieOptions)
 
@@ -69,42 +30,12 @@ export const register = async (req: Request, res: Response) => {
 
 //Login
 export const login = async (req: Request, res: Response) => {
-  const body = req.body ?? {}
-  const { email, password } = body
-  const details: ErrorDetail[] = []
-
-  if (typeof email !== 'string' || !email.trim()) {
-    details.push({
-      field: 'email',
-      message: 'Vui lòng nhập email',
-    })
-  }
-
-  if (typeof password !== 'string' || !password) {
-    details.push({
-      field: 'password',
-      message: 'Vui lòng nhập mật khẩu',
-    })
-  }
-
-  if (details.length > 0) {
-    throw new AppError('VALIDATION_ERROR', 'Dữ liệu không hợp lệ', details)
-  }
-
-  const normalizedEmail = normalizeEmail(email)
-
-  if (
-    !isValidEmail(normalizedEmail) ||
-    normalizedEmail.length > 255 ||
-    Buffer.byteLength(password, 'utf8') > 72
-  ) {
-    throw new AppError('VALIDATION_ERROR', 'Dữ liệu không hợp lệ')
-  }
+  const data = validate(loginSchema, req.body)
 
   //Gọi service đăng nhập
   const user = await authService.login({
-    email: normalizedEmail,
-    password,
+    email: data.email,
+    password: data.password,
   })
 
   //Tạo JWT

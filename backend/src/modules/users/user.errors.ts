@@ -1,20 +1,22 @@
-export class EmailTakenError extends Error {
+import { AppError } from '../../lib/errors.js'
+
+export class EmailTakenError extends AppError {
   constructor() {
-    super('Email đã tồn tại')
+    super('EMAIL_TAKEN', 'Email đã được sử dụng')
     this.name = 'EmailTakenError'
   }
 }
 
-export class UserNotFoundError extends Error {
+export class UserNotFoundError extends AppError {
   constructor() {
-    super('Người dùng không tồn tại')
+    super('NOT_FOUND', 'Người dùng không tồn tại')
     this.name = 'UserNotFoundError'
   }
 }
 
-export class InvalidCredentialsError extends Error {
+export class InvalidCredentialsError extends AppError {
   constructor() {
-    super('Email hoặc mật khẩu không đúng')
+    super('UNAUTHENTICATED', 'Email hoặc mật khẩu không đúng')
     this.name = 'InvalidCredentialsError'
   }
 }
