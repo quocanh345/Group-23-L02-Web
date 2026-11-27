@@ -50,6 +50,8 @@ Backend dùng ES Modules (`"type": "module"`). Khi import một file `.ts` khác
 
 ## 2. Từ clone đến chạy được
 
+### Bước 1: Clone repository và cài thư viện
+
 ```bash
 # Lấy code về
 git clone https://github.com/quocanh345/Group-23-L02-Web.git
@@ -59,14 +61,56 @@ cd Group-23-L02-Web
 npm install
 npm install --prefix backend
 npm install --prefix frontend
+```
 
-# Tạo file .env từ file mẫu (Git Bash / macOS / Linux)
+### Bước 2: Tạo file cấu hình môi trường
+
+```bash
+# Git Bash / macOS / Linux
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
+
 # Nếu dùng PowerShell:
 #   Copy-Item backend/.env.example backend/.env
 #   Copy-Item frontend/.env.example frontend/.env
+```
 
+### Bước 3: Cấu hình JWT
+
+Backend sử dụng JWT để xác thực người dùng. Trước khi chạy
+Backend, cần cấu hình `JWT_SECRET` và `JWT_EXPIRES_IN`
+trong file `backend/.env`.
+
+Tạo khóa bí mật ngẫu nhiên bằng lệnh:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Lệnh trên sinh ra một chuỗi ngẫu nhiên gồm 64 ký tự Hex.
+
+Mở file `backend/.env`, sao chép kết quả vừa tạo vào
+`JWT_SECRET` và cấu hình thời gian sống của Access Token:
+
+```dotenv
+JWT_SECRET=<chuỗi ngẫu nhiên vừa tạo>
+JWT_EXPIRES_IN=7d
+```
+
+Lưu ý:
+
+- Thay toàn bộ giá trị mẫu của `JWT_SECRET` bằng chuỗi vừa tạo.
+- `JWT_SECRET` phải có độ dài tối thiểu 32 ký tự.
+- `JWT_EXPIRES_IN=7d` nghĩa là Access Token hết hạn sau 7 ngày.
+- Backend sẽ không khởi động nếu `JWT_SECRET` chưa được
+  cấu hình hoặc quá ngắn.
+- Không chia sẻ JWT Secret hoặc commit file `.env` lên GitHub.
+- Nếu đã có file `backend/.env` từ trước, chỉ cần bổ sung
+  hai biến JWT nếu còn thiếu, không ghi đè file hiện tại.
+
+### Bước 4: Khởi động database và ứng dụng
+
+```bash
 # Bật PostgreSQL
 npm run db:up
 
@@ -78,9 +122,12 @@ npm --prefix backend run prisma:generate
 npm run dev
 ```
 
-Giá trị mặc định trong `.env.example` đã khớp với `docker-compose.yml`, nên chạy được ngay. Chỉ cần điền `AI_API_KEY` khi làm phần AI. **Không bao giờ commit file `.env`.**
+Cấu hình database mặc định trong `.env.example` đã khớp
+với `docker-compose.yml`. Chỉ cần điền `AI_API_KEY` khi
+làm phần AI. **Không bao giờ commit file `.env`.**
 
-Nếu thấy cảnh báo `npm warn install-scripts` khi cài thư viện thì có thể bỏ qua, dự án vẫn chạy bình thường.
+Nếu thấy cảnh báo `npm warn install-scripts` khi cài
+thư viện thì có thể bỏ qua, dự án vẫn chạy bình thường.
 
 ## 3. Địa chỉ khi chạy
 
@@ -134,6 +181,27 @@ Thường do máy đã cài sẵn PostgreSQL và nó đang chạy. Kiểm tra b�
 - Lệnh Prisma báo `The datasource.url property is required in your Prisma config file`.
 
 Cách sửa: làm lại bước tạo `.env` từ `.env.example` ở mục 2.
+
+**JWT_SECRET chưa được cấu hình hoặc quá ngắn**
+
+Backend dừng khi khởi động với thông báo:
+
+```text
+JWT_SECRET chưa được cấu hình hoặc quá ngắn
+```
+
+Nguyên nhân: file `backend/.env` chưa có `JWT_SECRET`
+hoặc giá trị có độ dài dưới 32 ký tự.
+
+Cách sửa: tạo khóa bí mật bằng lệnh:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Sao chép kết quả vào `JWT_SECRET` trong `backend/.env`,
+đảm bảo `JWT_EXPIRES_IN=7d` đã được cấu hình,
+sau đó khởi động lại Backend.
 
 **Docker chưa bật** (`failed to connect to the docker API ... dockerDesktopLinuxEngine`)
 
