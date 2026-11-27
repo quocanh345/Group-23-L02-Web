@@ -153,4 +153,64 @@ route → controller → service → repository → prisma
 Quy tắc:
 - **Chỉ repository được import `prisma`** (từ `src/lib/prisma.ts`). Không tạo `PrismaClient` mới ở chỗ khác.
 - Repository chỉ trả các trường an toàn. Hàm nào buộc phải trả trường nhạy cảm (ví dụ `passwordHash`) thì tên hàm phải nói rõ, như `findByEmailWithPassword`.
-- Repository đổi lỗi của Prisma (`P2002`, `P2025`...) thành lỗi riêng (ví dụ `EmailTakenError`, `UserNotFoundError` trong `users/user.errors.ts`). Service và controller kiểm tra bằng `instanceof`, không so sánh chuỗi thông báo.
+- Repository đổi lỗi của Prisma (`P2002`, `P2025`...) thành lỗi riêng (ví dụ `EmailTakenError`, `UserNotFoundError` trong `users/user.errors.ts`). Các lỗi riêng này kế thừa `AppError` (xem mục "Báo lỗi" bên dưới).
+
+### Kiểm tra dữ liệu đầu vào
+
+Dùng thư viện [Zod](https://zod.dev). Mỗi dữ liệu gửi lên (body, params, query) phải được kiểm tra trước khi dùng.
+
+| Đặt ở đâu | Chứa gì |
+|---|---|
+| `src/modules/<module>/<module>.schema.ts` | Schema riêng của module, ví dụ `registerSchema`, `loginSchema` trong `auth.schema.ts` |
+| `src/lib/common.schema.ts` | Schema dùng chung: `idParamSchema` cho `:id`, `paginationQuerySchema` cho `page`, `pageSize` |
+| `src/lib/validate.ts` | Hàm `validate(schema, data)` |
+
+Quy tắc:
+- **Controller luôn lấy dữ liệu qua `validate(...)`**, không đọc thẳng `req.body`, `req.params`, `req.query`.
+- Chỉ dùng dữ liệu mà `validate` trả về: đã đúng kiểu, đã làm sạch (`trim`, chữ thường...), đã bỏ các trường lạ như `role`, `userId`.
+- Dữ liệu sai thì `validate` tự ném lỗi `400 VALIDATION_ERROR` kèm `details` cho từng trường. Controller không cần kiểm tra gì thêm.
+- Các trường người dùng nhìn thấy (email, mật khẩu, họ tên...) nên ghi thông báo lỗi tiếng Việt riêng trong schema.
+
+Ví dụ:
+
+```ts
+// auth.schema.ts
+export const loginSchema = z.object({
+  email: z.string().trim().toLowerCase().pipe(z.email('Email không hợp lệ')),
+  password: z.string().min(1, 'Vui lòng nhập mật khẩu'),
+})
+
+// auth.controller.ts
+export const login = async (req: Request, res: Response) => {
+  const data = validate(loginSchema, req.body) // data: { email: string; password: string }
+  const user = await userService.login(data)
+  res.status(200).json({ data: user })
+}
+
+// Với params và query
+const { id } = validate(idParamSchema, req.params) // id: number
+const { page, pageSize } = validate(paginationQuerySchema, req.query)
+```
+
+> **Lưu ý khi viết schema email:** làm sạch trước rồi mới kiểm tra định dạng (`z.string().trim().toLowerCase().pipe(z.email())`). Viết `z.email().trim()` sẽ báo lỗi với email có khoảng trắng, vì Zod kiểm tra định dạng trước khi cắt khoảng trắng. Dùng `.toLowerCase()` để đổi sang chữ thường; `.lowercase()` chỉ kiểm tra chứ không đổi.
+
+### Báo lỗi
+
+Mọi lỗi trả về cho client đều do `errorHandler` (`src/middlewares/error.middleware.ts`) định dạng theo `docs/api_convention.md` mục 4.
+
+Quy tắc:
+- **Controller không `try/catch` để trả lỗi và không tự gọi `res.status(...)` cho lỗi.** Chỉ cần ném lỗi, Express 5 tự chuyển lỗi (kể cả trong hàm `async`) tới `errorHandler`.
+- Lỗi chủ động ném ra phải là `AppError` hoặc lớp kế thừa nó (`src/lib/errors.ts`). Lỗi không phải `AppError` sẽ bị coi là lỗi lạ và trả `500 INTERNAL_ERROR`.
+- Lỗi nghiệp vụ dùng lại nhiều lần thì tạo class riêng kế thừa `AppError`, ví dụ:
+
+  ```ts
+  export class EmailTakenError extends AppError {
+    constructor() {
+      super('EMAIL_TAKEN', 'Email đã được sử dụng')
+      this.name = 'EmailTakenError'
+    }
+  }
+  ```
+
+- Mã lỗi (`EMAIL_TAKEN`, `NOT_FOUND`...) phải có trong `ERROR_STATUS` ở `src/lib/errors.ts`. Thêm mã mới thì cập nhật cả bảng mã lỗi riêng trong `docs/api.md` mục 1, trong cùng PR.
+- Chỉ dùng `try/catch` khi cần **xử lý tại chỗ**, ví dụ đổi lỗi của thư viện thành `AppError` (như repository đổi lỗi `P2002` của Prisma thành `EmailTakenError`), thử lại, hoặc dọn dẹp tài nguyên.
