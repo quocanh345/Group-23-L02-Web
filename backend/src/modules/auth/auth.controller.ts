@@ -1,19 +1,17 @@
 import type { Request, Response } from 'express'
 import { generateAccessToken } from './auth.utils.js'
 import { COOKIE_NAME, cookieOptions } from './auth.cookie.js'
-import { UserService } from '../users/user.service.js'
+import { authService } from './auth.service.js'
 
 import { validate } from '../../lib/validate.js'
 import { registerSchema, loginSchema } from './auth.schema.js'
-
-const userService = new UserService()
 
 //Register
 export const register = async (req: Request, res: Response) => {
   const data = validate(registerSchema, req.body)
 
   //Gọi service đăng ký
-  const user = await userService.register({
+  const user = await authService.register({
     email: data.email,
     password: data.password,
     fullName: data.fullName,
@@ -35,7 +33,7 @@ export const login = async (req: Request, res: Response) => {
   const data = validate(loginSchema, req.body)
 
   //Gọi service đăng nhập
-  const user = await userService.login({
+  const user = await authService.login({
     email: data.email,
     password: data.password,
   })

@@ -6,17 +6,10 @@ import cookieParser from 'cookie-parser'
 
 import type { Request, Response } from 'express'
 
-import authRouter from './modules/auth/auth.routes.js'
 import { errorHandler } from './middlewares/error.middleware.js'
 
 const app = express()
 const port = Number(process.env.PORT) || 3000
-
-//Cho phép Express đọc dữ liệu JSON
-app.use(express.json())
-
-//Đọc Cookie
-app.use(cookieParser())
 
 //CORS: cho phép Frontend gọi Backend
 app.use(
@@ -26,14 +19,14 @@ app.use(
   }),
 )
 
-//Kiểm tra tình trạng server
-app.use('/api', indexRouter)
+//Cho phép Express đọc dữ liệu JSON
+app.use(express.json())
+
+//Đọc Cookie
+app.use(cookieParser())
 
 //Mọi route đều có tiền tố /api
-const apiRouter = express.Router()
-apiRouter.use('/auth', authRouter)
-
-app.use('/api', apiRouter)
+app.use('/api', indexRouter)
 
 //Đường dẫn không tồn tại
 app.use((req: Request, res: Response) => {
