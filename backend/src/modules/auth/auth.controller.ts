@@ -121,16 +121,13 @@ export const login = async (req: Request, res: Response) => {
 }
 
 export const getMe = async (req: Request, res: Response) => {
-  if(!req.user){
-    throw new AppError(
-      'UNAUTHENTICATED',
-      'Bạn chưa đăng nhập'
-    )
+  if (!req.user) {
+    throw new AppError('UNAUTHENTICATED', 'Bạn chưa đăng nhập')
   }
 
   const user = await authService.getCurrentUser(req.user.userId)
 
-  return res.status(200).json({data: user})
+  return res.status(200).json({ data: user })
 }
 
 export const logout = (_req: Request, res: Response) => {

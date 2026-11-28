@@ -64,14 +64,11 @@ export class AuthService {
     return safeUser
   }
 
-  async getCurrentUser(userId: number): Promise<SafeUser>{
+  async getCurrentUser(userId: number): Promise<SafeUser> {
     const user = await this.userRepository.findById(userId)
 
-    if(!user){
-      throw new AppError(
-        'UNAUTHENTICATED',
-        'Tài khoản không còn tồn tại'
-      )
+    if (!user) {
+      throw new AppError('UNAUTHENTICATED', 'Tài khoản không còn tồn tại')
     }
 
     return user
